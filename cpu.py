@@ -36,8 +36,8 @@ class Registers:
 
 
 	# Program Counter Operations
-	def inc_pc(self):
-		self.pc += 1
+	def inc_pc(self, step = 1):
+		self.pc += step
 
 	def read_pc(self):
 		return self.pc
@@ -81,6 +81,25 @@ class Registers:
 					"N" : 0b10000000}
 
 		self.flags = self.flags & (~flag_def[flag])
+
+	def get_flag(self, flag):
+		flag_def = {"C" : 0b00000001,
+					"Z" : 0b00000010,
+					"I" : 0b00000100,
+					"D" : 0b00001000,
+
+					"s" : 0b00010000,
+					"b" : 0b00100000,
+					"V" : 0b01000000,
+					"N" : 0b10000000}
+		
+		if (self.flags & flag_def[flag]) > 0:
+			return True
+		else:
+			return False
+
+
+
 
 	def read_flags(self):
 		return self.flags
@@ -175,6 +194,27 @@ class CPU:
 
 		return True
 
+	def BNE(self):
+		self.registers.inc_x()
+		
+		if not self.check_flag("Z"):
+			self.registers.inc_x(self.ROM[self.registers.read_pc()])
+		return True
+
+	def STA_X(self):
+		self.registers.inc_x()
+
+		self.RAM[self.registers.read_x()] = self.registers.read_a()
+		return True
+
+	def DEY(self):
+		self.registers.set_y(self.registers.read_y() - 1)
+		return True
+
+	def LDY(self):
+		self.registers.inc_pc()
+
+		self.registers.set_y(self.RAM[self.registers.read_pc()])
 
 
 
@@ -191,13 +231,14 @@ class CPU:
 		for i in range(len(self.RAM)):
 			print("{:02d} : {}".format(i, self.RAM[i]))
 
+	def print_ASCII(self):
+		print(''.join(chr(i) for i in self.RAM[128:]))
+
 
 
 	# Running Code
 
 	def run(self):
-		self.ROM = program
-
 		running = True
 		while running:
 			task = self.operations.get(self.ROM[self.registers.read_pc()], 
@@ -207,7 +248,9 @@ class CPU:
 			self.print_info()
 
 			if not running:
+				self.print_ASCII()
 				print("Program Stopped.")
+
 
 			self.registers.inc_pc()
 
@@ -217,7 +260,9 @@ class CPU:
 
 
 
-program = [1, 0x64, 2, 0x07, 3, 15, 0]
+program1 = [1, 0x64, 2, 0x07, 3, 15, 0]
 
-cpu = CPU(program)
+program2 = [4, 128, 1, 0x77, 8, 5, 1, 0x68, 8, 5, 1, 0x6F, 8, 5, 1, 0x20, 8, 5, 1, 0x6c, 8, 5, 1, 0x65, 8, 5, 1, 0x74, 8, 5, 1, 0x20, 8, 5, 1, 0x74, 8, 5, 1, 0x68, 8, 5, 1, 0x65, 8, 5, 1, 0x20, 8, 5, 1, 0x64, 8, 5, 1, 0x6F, 8, 5, 1, 0x67, 8, 5, 1, 0x73, 8, 5, 1, 0x20, 8, 5, 1, 0x6F, 8, 5, 1, 0x75, 8, 5, 1, 0x74, 8, 5, 1, 0x20, 8, 5, 10, 3, 1, 0x77, 8, 5, 1, 0x68, 8, 5, 1, 0x6F, 8, 5, 1, 0x20, 8, 5, 9, 6, 0, 7, -20, 0]
+
+cpu = CPU(program2)
 cpu.run()
