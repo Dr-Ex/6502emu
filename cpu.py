@@ -1,3 +1,6 @@
+# Created by Henry Nicholson
+# 07 - 03 - 2021
+
 class Registers:
 	def __init__(self, a=0, x=0, y=0, pc=0, flags=0):
 
